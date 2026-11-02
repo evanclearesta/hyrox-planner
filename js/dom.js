@@ -28,6 +28,28 @@ export function twoTap(btn, armedLabel, fn) {
   return btn;
 }
 
+// A short message at the bottom of the screen, with an optional action such as Undo.
+let toastEl = null, toastTimer = null;
+export function toast(text, action, fn) {
+  toastEl?.remove(); clearTimeout(toastTimer);
+  const hide = () => { toastEl?.remove(); toastEl = null; };
+  toastEl = el("div", { class: "toast", role: "status" }, el("span", {}, text),
+    action && el("button", { onclick: () => { hide(); fn(); } }, action));
+  document.body.append(toastEl);
+  toastTimer = setTimeout(hide, 6000);
+}
+
+// "⋯" menu: items are [label, fn, class]. A <details> so it opens and closes without script.
+export function menu(label, items) {
+  const d = el("details", { class: "menu" }, el("summary", { "aria-label": label }, "⋯"),
+    el("div", { class: "menu-panel" }, items.filter(Boolean).map(([text, fn, cls]) =>
+      el("button", { class: cls || "", onclick: e => fn(e, d) }, text))));
+  return d;
+}
+document.addEventListener("click", e => {
+  document.querySelectorAll("details.menu[open]").forEach(d => { if (!d.contains(e.target)) d.open = false; });
+});
+
 export function download(name, text, type = "application/json") {
   const url = URL.createObjectURL(new Blob([text], { type }));
   const a = el("a", { href: url, download: name });

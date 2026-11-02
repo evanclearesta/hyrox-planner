@@ -1,12 +1,12 @@
 // Offline cache. Stale-while-revalidate: open instantly from cache, refresh in the background,
 // so a new deploy shows up on the next launch. Bump VERSION to drop old caches entirely.
-const VERSION = "v4";
+const VERSION = "v5";
 const CACHE = "hyrox-" + VERSION;
 const ASSETS = [
   "./", "index.html", "manifest.webmanifest", "css/app.css",
   "js/app.js", "js/dom.js", "js/editor.js", "js/library.js", "js/moves.js", "js/seed.js", "js/session.js", "js/store.js", "js/timer.js",
   "icons/icon.svg", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png",
-  ...["skierg", "rowerg", "sled-push", "sled-pull", "wall-ball", "burpee", "farmers-carry", "kettlebell", "run"].map(m => "icons/moves/" + m + ".svg")
+  ...["skierg", "rowerg", "sled-push", "sled-pull", "wall-ball", "burpee", "farmers-carry", "sandbag-lunge", "kettlebell", "run"].map(m => "icons/moves/" + m + ".svg")
 ];
 
 self.addEventListener("install", e => {

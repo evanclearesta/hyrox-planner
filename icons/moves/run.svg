@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
   <!-- figure mid-stride -->
   <circle cx="38" cy="9" r="4.5" fill="#000" stroke="none"/>
   <path d="M36 16l-6 18 10 8-2 16M30 34l-10 8-10-2"/>
   <path d="M35 19l9 7 7-4M35 19l-10 4-4 9"/>
   <!-- speed lines -->
-  <path d="M4 20h10M2 28h8" stroke-width="2"/>
+  <path d="M4 20h10M2 28h8" stroke-width="3"/>
 </svg>
