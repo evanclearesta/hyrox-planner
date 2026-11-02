@@ -1,4 +1,4 @@
-import { el, download, slug, isoDay, addDays, toast, menu } from "./dom.js";
+import { el, download, slug, isoDay, addDays, toast, menu, pickDate } from "./dom.js";
 import * as store from "./store.js";
 import { blockFormat, blockDuration, workoutDuration, fmtMin } from "./session.js";
 import { moveOf, moveIcon, splitTask } from "./moves.js";
@@ -105,10 +105,14 @@ export function renderLibrary(root) {
     }
   } });
 
+  const calBtn = el("button", { class: "head-btn", "aria-label": "Go to a date",
+    onclick: () => pickDate(calBtn.parentNode, selected, iso => { selected = iso; redraw(); }) },
+    el("span", { class: "cal-ic", "aria-hidden": "true" }));
+
   root.append(
     el("header", { class: "top" },
       el("h1", { class: "title" }, "HYROX Planner"),
-      newBtn,
+      calBtn, newBtn,
       menu("More options", [
         ["Import workouts", (e, d) => { d.open = false; fileIn.click(); }],
         list.length > 1 && ["Export all", (e, d) => { d.open = false; download("hyrox-workouts.json", JSON.stringify(store.all(), null, 2)); }],
@@ -150,7 +154,7 @@ export function renderLibrary(root) {
   }
 
   // Week strip, Mon to Sun, a week per swipe. Eight weeks either side of today, stretched to
-  // reach every planned workout, plus a day each end so the first and last weeks still peek.
+  // reach every planned workout.
   function weekStrip() {
     const dates = list.map(w => w.date).filter(Boolean).sort();
     let from = mondayOf(addDays(today, -56)), to = addDays(mondayOf(addDays(today, 56)), 6);
@@ -159,7 +163,7 @@ export function renderLibrary(root) {
     const last = [dates.at(-1), selected].filter(Boolean).sort().at(-1);
     if (last > to) to = addDays(mondayOf(last), 6);
     const days = [];
-    for (let d = addDays(from, -1); d <= addDays(to, 1); d = addDays(d, 1)) days.push(d);
+    for (let d = from; d <= to; d = addDays(d, 1)) days.push(d);
     return el("div", { class: "week", role: "listbox", "aria-label": "Pick a day" }, days.map(d => {
       const mine = onDay(d), done = mine.length && mine.every(isDone);
       return el("button", {
@@ -167,7 +171,8 @@ export function renderLibrary(root) {
         "data-day": d, role: "option",
         "aria-label": weekday(d, "long") + " " + d + (done ? ", done" : mine.length ? ", " + mine.length + " planned" : ""),
         onclick: () => select(d)
-      }, el("span", { class: "dow" }, weekday(d, "narrow")), el("span", { class: "num" }, String(+d.slice(8))), el("span", { class: "dot" }));
+      }, el("span", { class: "pill" },
+        el("span", { class: "num" }, String(+d.slice(8))), el("span", { class: "dow" }, weekday(d, "short").slice(0, 2)), el("span", { class: "dot" })));
     }));
   }
 
@@ -254,16 +259,24 @@ export function renderLibrary(root) {
           } }, "Delete")));
     };
 
+    // Reschedule: the date picker opens straight from the menu, and the strip follows the workout.
+    const move = iso => {
+      if (iso === w.date) return;
+      const from = w.date;
+      w.date = iso; store.put(w); selected = iso; redraw();
+      toast("Moved to " + fmtDate(iso), "Undo", () => { w.date = from; store.put(w); selected = from || today; redraw(); });
+    };
+
     const settings = [oneDamper && "Ergs on " + oneDamper + ".", sledTotal && "Sled weights include the sled."].filter(Boolean).join(" ");
     const start = isToday
       ? el("a", { class: "btn primary start", href: "#/run/" + w.id }, "Start", el("small", {}, fmtMin(workoutDuration(w)) + " · first up: " + (w.blocks[0]?.name || blockFormat(w.blocks[0] || {}) || "block 1").toLowerCase()))
       : el("a", { class: "btn start-quiet", href: "#/run/" + w.id }, w.date > today ? "Start early" : "Start");
 
-    return el("section", { class: "card w-card" + (isToday ? " is-today" : "") },
-      el("div", { class: "w-top" },
+    const top = el("div", { class: "w-top" },
         el("p", { class: "eyebrow" + (isToday ? " is-today" : "") }, w.date ? dayLabel(w.date) : "No date"),
         menu("Workout options", [
           ["Edit", () => { location.hash = "#/edit/" + w.id; }],
+          [w.date ? "Move to another day" : "Set a date", (e, d) => { d.open = false; pickDate(top, w.date || today, move); }],
           ["Duplicate", () => {
             const copy = structuredClone(w);
             copy.id = store.uid(); copy.name = (w.name || "Workout") + " (copy)"; copy.date = today;
@@ -271,7 +284,9 @@ export function renderLibrary(root) {
           }],
           ["Export", (e, d) => { d.open = false; download(slug(w.name) + ".json", JSON.stringify(w, null, 2)); }],
           ["Delete…", confirmDelete, "danger"]
-        ])),
+        ]));
+    return el("section", { class: "card w-card" + (isToday ? " is-today" : "") },
+      top,
       el("h2", { class: "w-name" }, w.name || "Untitled workout"),
       el("ul", { class: "chips", "aria-label": "Summary" },
         summary(w).map((s, k) => el("li", { class: k === 0 ? "key" : "" }, s)),

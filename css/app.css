@@ -203,30 +203,36 @@ button:active, .btn:active { transform: translateY(1px); }
 }
 .toast button { background: none; border: 0; padding: 8px 12px; color: #9a5a00; font-weight: 700; }
 
-/* Week strip: 8 day-widths across, so a week fills 7 and half a day peeks each side.
-   It bleeds to the screen edge; snapping lands a Monday after the half-day peek. */
+/* Week strip */
 .week-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 36px; margin-bottom: -8px; }
 .month { font-family: var(--display); font-weight: 600; font-size: 1.05rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .today-btn { padding: 6px 12px; font-size: .9rem; color: var(--work); border-color: var(--work); background: none; border-radius: 999px; }
 .week {
-  display: flex; overflow-x: auto; margin-inline: -16px;
-  scroll-snap-type: x mandatory; scroll-padding-inline: 6.25%;
+  display: flex; overflow-x: auto;
+  scroll-snap-type: x mandatory;
   scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
 }
 .week::-webkit-scrollbar { display: none; }
-.day {
-  flex: 0 0 12.5%; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 8px 0 6px; background: none; border: 0; border-radius: 12px; color: var(--fg);
-}
+/* Seven pills fill the width; a swipe moves a whole week and snaps to its Monday. */
+.day { flex: 0 0 calc(100% / 7); display: flex; justify-content: center; padding: 0 3px; background: none; border: 0; border-radius: 999px; color: var(--fg); }
 .day.mon { scroll-snap-align: start; scroll-snap-stop: always; }
-.day .dow { font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.day .num { width: 2.2em; height: 2.2em; display: grid; place-items: center; border-radius: 50%; font-family: var(--display); font-weight: 700; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
-.day .dot { width: 7px; height: 7px; border-radius: 50%; }
-.day.has .dot { border: 1.5px solid var(--work); }
-.day.done .dot { background: var(--done); border-color: var(--done); }
-.day.today .num { color: var(--work); }
-.day.sel .num { background: var(--work); color: #1a1205; }
+.day .pill {
+  width: 100%; max-width: 52px; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 12px 0 8px; border: 1.5px solid var(--line-hi); border-radius: 999px;
+}
+.day .num { font-family: var(--display); font-weight: 600; font-size: 1.35rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.day .dow { font-size: .9rem; color: var(--muted); }
+.day .dot { width: 6px; height: 6px; margin-top: 2px; border-radius: 50%; }
+.day.has .dot { background: var(--work); }
+.day.done .dot { background: var(--done); }
+.day.today .num, .day.today .dow { color: var(--work); }
+.day.sel .pill { border-color: var(--work); background: rgba(243,168,59,.12); }
 .day.sel .dow { color: var(--fg); }
+.day:focus-visible { outline: none; }
+.day:focus-visible .pill { outline: 2px solid var(--work); outline-offset: 2px; }
+.top, .w-top { position: relative; }
+.date-pop { position: absolute; right: 0; bottom: 0; width: 1px; height: 1px; padding: 0; border: 0; opacity: 0; pointer-events: none; }
+.cal-ic { width: 22px; height: 22px; background: currentColor; -webkit-mask: url(../icons/calendar.svg) center / contain no-repeat; mask: url(../icons/calendar.svg) center / contain no-repeat; }
 .day-pane { display: flex; flex-direction: column; gap: 12px; }
 .day-pane:empty { display: none; }
 .sect { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: -4px; }
