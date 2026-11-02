@@ -1,4 +1,4 @@
-// Hash routes, so any static host works: #/  #/new  #/edit/:id  #/run/:id
+// Hash routes, so any static host works: #/  #/new  #/new/:date  #/edit/:id  #/run/:id
 import * as store from "./store.js";
 import { renderLibrary } from "./library.js";
 import { renderEditor } from "./editor.js";
@@ -13,7 +13,7 @@ function route() {
   document.title = "HYROX Planner";
   window.scrollTo(0, 0);
   const [view, id] = location.hash.replace(/^#\/?/, "").split("/").map(decodeURIComponent);
-  if (view === "new") renderEditor(root);
+  if (view === "new") renderEditor(root, null, id);
   else if (view === "edit") renderEditor(root, id);
   else if (view === "run") {
     const w = store.get(id);

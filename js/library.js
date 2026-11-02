@@ -1,4 +1,4 @@
-import { el, twoTap, download, slug } from "./dom.js";
+import { el, twoTap, download, slug, isoDay, addDays } from "./dom.js";
 import * as store from "./store.js";
 import { blockFormat, blockDuration, workoutDuration, buildSession, fmt } from "./session.js";
 import { moveOf, moveIcon, shortTask } from "./moves.js";
@@ -12,10 +12,29 @@ const fmtDate = iso => {
   return isNaN(d) ? iso : d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 };
 
+const dayDate = new Date(Date.UTC(2000, 0, 1));
+const weekday = (iso, style) => { dayDate.setTime(Date.parse(iso + "T00:00:00Z")); return dayDate.toLocaleDateString(undefined, { weekday: style, timeZone: "UTC" }); };
+// Monday of the week the day falls in (getDay: Sun = 0).
+const mondayOf = iso => addDays(iso, -((new Date(iso + "T00:00:00").getDay() + 6) % 7));
+
+// The day picked in the week strip. Kept across redraws and edits; a fresh launch starts on today.
+let selected = null;
+
 export function renderLibrary(root) {
   const redraw = () => { root.replaceChildren(); renderLibrary(root); };
   const list = store.all().slice().sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.updatedAt || 0) - (a.updatedAt || 0));
   const msg = el("p", { class: "error", hidden: true });
+  const today = isoDay();
+  if (!selected) selected = today;
+  const onDay = iso => list.filter(w => w.date === iso);
+
+  const newBtn = el("a", { class: "btn primary", href: "#/new" }, "+ New workout");
+  const monthLabel = el("span", { class: "month" });
+  const todayBtn = el("button", { class: "today-btn", onclick: () => select(today, "smooth") }, "Back to today");
+  const weekHead = el("div", { class: "week-head" }, monthLabel, todayBtn);
+  const strip = weekStrip();
+  const dayPane = el("div", { class: "day-pane" });
+  const others = el("div", { class: "day-pane" });
 
   const fileIn = el("input", { type: "file", accept: "application/json,.json", hidden: true, onchange: async e => {
     const f = e.target.files[0]; e.target.value = "";
@@ -36,13 +55,61 @@ export function renderLibrary(root) {
       el("h1", { class: "title" }, "HYROX Planner"),
       el("span", { class: "seg-count" }, list.length + (list.length === 1 ? " workout" : " workouts"))),
     el("div", { class: "row" },
-      el("a", { class: "btn primary", href: "#/new" }, "+ New workout"),
+      newBtn,
       el("button", { onclick: () => fileIn.click() }, "Import"),
       list.length > 1 && el("button", { onclick: () => download("hyrox-workouts.json", JSON.stringify(store.all(), null, 2)) }, "Export all"),
       fileIn),
     msg,
-    ...(list.length ? list.map(card) : [el("section", { class: "card empty muted" }, "No workouts yet. Tap New workout to plan one.")])
+    weekHead, strip, dayPane, others
   );
+  select(selected, "instant");
+
+  // Week strip, Mon to Sun, a week per swipe. Eight weeks either side of today, stretched to
+  // reach every planned workout, plus a day each end so the first and last weeks still peek.
+  function weekStrip() {
+    const dates = list.map(w => w.date).filter(Boolean).sort();
+    let from = mondayOf(addDays(today, -56)), to = addDays(mondayOf(addDays(today, 56)), 6);
+    if (dates.length && dates[0] < from) from = mondayOf(dates[0]);
+    if (selected < from) from = mondayOf(selected);
+    const last = [dates.at(-1), selected].filter(Boolean).sort().at(-1);
+    if (last > to) to = addDays(mondayOf(last), 6);
+    const days = [];
+    for (let d = addDays(from, -1); d <= addDays(to, 1); d = addDays(d, 1)) days.push(d);
+    return el("div", { class: "week", role: "listbox", "aria-label": "Pick a day" }, days.map(d => {
+      const n = onDay(d).length;
+      return el("button", {
+        class: "day" + (d === mondayOf(d) ? " mon" : "") + (d === today ? " today" : "") + (n ? " has" : ""),
+        "data-day": d, role: "option", "aria-label": weekday(d, "long") + " " + d + (n ? ", " + n + " planned" : ""),
+        onclick: () => select(d)
+      }, el("span", { class: "dow" }, weekday(d, "narrow")), el("span", { class: "num" }, String(+d.slice(8))), el("span", { class: "dot" }));
+    }));
+  }
+
+  // Pick a day: highlight it, list its workouts, and (when asked) swipe the strip to its week.
+  function select(iso, scroll) {
+    selected = iso;
+    strip.querySelectorAll(".day").forEach(b => {
+      b.classList.toggle("sel", b.dataset.day === iso);
+      b.setAttribute("aria-selected", b.dataset.day === iso);
+    });
+    const d = new Date(iso + "T00:00:00");
+    monthLabel.textContent = d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    todayBtn.hidden = iso === today;
+    newBtn.href = "#/new/" + iso;
+    const mine = onDay(iso);
+    dayPane.replaceChildren(
+      el("h2", { class: "day-title" }, iso === today ? "Today" : fmtDate(iso).replace(/,? \d{4}$/, "")),
+      ...(mine.length ? mine.map(card) : [el("section", { class: "card empty muted" }, "Nothing planned. ",
+        el("a", { href: "#/new/" + iso }, "Plan a workout"))]));
+    const rest = list.filter(w => w.date !== iso);
+    others.replaceChildren(...(rest.length ? [el("h2", { class: "day-title" }, "Other workouts"),
+      el("ul", { class: "others" }, rest.map(w => el("li", {}, el("button", {
+        onclick: () => w.date ? select(w.date, "smooth") : (location.hash = "#/edit/" + w.id)
+      }, el("span", { class: "o-name" }, w.name || "Untitled workout"),
+        el("span", { class: "o-date" }, w.date ? fmtDate(w.date) : "No date"),
+        el("span", { class: "o-dur" }, fmt(workoutDuration(w)))))))] : []));
+    if (scroll) strip.querySelector('[data-day="' + mondayOf(iso) + '"]')?.scrollIntoView({ behavior: scroll, inline: "start", block: "nearest" });
+  }
 
   // Every movement in the main work, once each: what this session is, at a glance.
   function moveStrip(w) {

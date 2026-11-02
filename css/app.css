@@ -143,6 +143,38 @@ button:active, .btn:active { transform: translateY(1px); }
 .w-card .start { width: 100%; padding: 12px; }
 .empty { text-align: center; padding: 32px 16px; }
 
+/* Week strip: 8 day-widths across, so a week fills 7 and half a day peeks each side.
+   It bleeds to the screen edge; snapping lands a Monday after the half-day peek. */
+.week-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 36px; margin-bottom: -8px; }
+.month { font-family: var(--display); font-weight: 600; font-size: 1.05rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.today-btn { padding: 6px 12px; font-size: .9rem; color: var(--work); border-color: var(--work); background: none; border-radius: 999px; }
+.week {
+  display: flex; overflow-x: auto; margin-inline: -16px;
+  scroll-snap-type: x mandatory; scroll-padding-inline: 6.25%;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
+}
+.week::-webkit-scrollbar { display: none; }
+.day {
+  flex: 0 0 12.5%; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 0 6px; background: none; border: 0; border-radius: 12px; color: var(--fg);
+}
+.day.mon { scroll-snap-align: start; scroll-snap-stop: always; }
+.day .dow { font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.day .num { width: 2.2em; height: 2.2em; display: grid; place-items: center; border-radius: 50%; font-family: var(--display); font-weight: 700; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+.day .dot { width: 6px; height: 6px; border-radius: 50%; }
+.day.has .dot { background: var(--work); }
+.day.today .num { color: var(--work); }
+.day.sel .num { background: var(--work); color: #1a1205; }
+.day.sel .dow { color: var(--fg); }
+.day-pane { display: flex; flex-direction: column; gap: 12px; }
+.day-pane:empty { display: none; }
+.day-title { margin: 0; font-family: var(--display); font-weight: 700; font-size: 1.1rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.others { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.others button { width: 100%; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 10px 14px; text-align: left; font-weight: 500; }
+.others .o-name { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.others .o-date { grid-row: 2; color: var(--muted); font-size: .85rem; }
+.others .o-dur { grid-row: 1 / 3; grid-column: 2; align-self: center; font-family: var(--display); font-weight: 700; font-size: 1.15rem; color: var(--work); font-variant-numeric: tabular-nums; }
+
 /* ---- Editor ---- */
 .form { display: flex; flex-direction: column; gap: 12px; }
 .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }

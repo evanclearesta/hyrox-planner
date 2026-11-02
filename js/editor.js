@@ -1,21 +1,17 @@
-import { el, twoTap } from "./dom.js";
+import { el, twoTap, isoDay } from "./dom.js";
 import * as store from "./store.js";
 import { BLOCK_TYPES, blockTitle, blockDuration, workoutDuration, buildSession, fmt, parseDur,
   tasksToText, textToTasks, newBlock, convertBlock } from "./session.js";
 
-const today = () => {
-  const d = new Date();
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-};
-
-export function renderEditor(root, id) {
+// date: the day a new workout is planned for (from the week strip); defaults to today.
+export function renderEditor(root, id, date) {
   const existing = id ? store.get(id) : null;
   if (id && !existing) {
     root.append(el("p", {}, "That workout isn't on this device. "), el("a", { href: "#/" }, "Back to workouts"));
     return;
   }
   const w = existing ? structuredClone(existing) : {
-    id: store.uid(), name: "", date: today(), notes: "",
+    id: store.uid(), name: "", date: date || isoDay(), notes: "",
     blocks: [newBlock("single", "Warm-up", [], "", 600), newBlock("every", "Block 1"), newBlock("single", "Cool-down", [], "", 300)]
   };
   let dirty = !existing;

@@ -36,3 +36,7 @@ export function download(name, text, type = "application/json") {
 }
 
 export const slug = s => (s || "workout").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "workout";
+
+// Dates are local calendar days as "YYYY-MM-DD", so "today" is today where the phone is.
+export const isoDay = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+export const addDays = (iso, n) => { const d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + n); return isoDay(d); };
