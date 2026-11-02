@@ -4,7 +4,9 @@ import { blockFormat, blockDuration, workoutDuration, fmtMin } from "./session.j
 import { moveOf, moveIcon, splitTask } from "./moves.js";
 
 const blockTasks = b => (b.type === "emom" ? b.stations.flatMap(st => st.tasks) : b.tasks) || [];
-const mainBlocks = w => w.blocks.filter(b => b.type !== "single");
+// Warm-up and cool-down are the only timed pieces left out; a sim's runs and stations are main work.
+const isBookend = b => b.type === "single" && /warm|cool/i.test(b.name || b.label || "");
+const mainBlocks = w => w.blocks.filter(b => !isBookend(b));
 // "Block 1" says nothing a reader needs, so only real names are shown.
 const realName = b => (b.name && !/^block\s*\d+$/i.test(b.name.trim()) ? b.name : "");
 
@@ -33,7 +35,7 @@ function movesOf(w) {
 function running(w) {
   let m = 0, more = false;
   for (const b of mainBlocks(w)) {
-    const times = b.type === "amrap" ? 0 : b.rounds;
+    const times = b.type === "amrap" ? 0 : b.rounds || 1;
     for (const [what, load] of blockTasks(b)) {
       if (moveOf(what)?.id !== "run") continue;
       const a = splitTask(what, load).amount.match(/^([\d.]+) (m|km)$/);
@@ -54,7 +56,10 @@ export function timeline(w) {
     const min = fmtMin(blockDuration(b));
     if (b.type === "single") {
       const n = b.name || b.label || "Timed piece";
-      return { b, label: (/warm/i.test(n) ? "WU" : /cool/i.test(n) ? "CD" : "") + " " + blockDuration(b) / 60, spoken: n + " " + min };
+      // A sim is a long run of short pieces; labelling each one would only overlap.
+      const m = Math.round(blockDuration(b) / 60);
+      const label = isBookend(b) ? (/warm/i.test(n) ? "WU " : "CD ") + m : m >= 8 ? String(m) : "";
+      return { b, label, spoken: n + " " + min };
     }
     // "EMOM 15" and "AMRAP 12" already carry their minutes; "Every 3:30 × 4" becomes "E3:30 · 14".
     const f = blockFormat(b), every = f.match(/^Every (\S+) × \d+$/);
@@ -225,10 +230,10 @@ export function renderLibrary(root) {
 
     const planRow = b => {
       const dur = el("span", { class: "d" }, fmtMin(blockDuration(b)));
-      if (b.type === "single") return el("li", { class: "wb soft" }, el("span", { class: "wb-fmt" }, b.name || b.label || "Timed piece"), dur);
+      if (isBookend(b) || (b.type === "single" && !b.tasks?.length)) return el("li", { class: "wb soft" }, el("span", { class: "wb-fmt" }, b.name || b.label || "Timed piece"), dur);
       const name = realName(b);
       return el("li", { class: "wb" },
-        el("span", { class: "wb-fmt" }, blockFormat(b), name && el("small", {}, name)), dur,
+        el("span", { class: "wb-fmt" }, blockFormat(b) || name || b.label || "Timed piece", blockFormat(b) && name && el("small", {}, name)), dur,
         el("ul", { class: "wb-tasks" }, blockTasks(b).map(([what, load]) => {
           const m = moveOf(what);
           const t = splitTask(what, load === oneDamper ? "" : load);
