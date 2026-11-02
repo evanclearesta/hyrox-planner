@@ -1,6 +1,11 @@
 import { el, twoTap, download, slug } from "./dom.js";
 import * as store from "./store.js";
-import { blockTitle, blockDuration, workoutDuration, buildSession, fmt } from "./session.js";
+import { blockFormat, blockDuration, workoutDuration, buildSession, fmt } from "./session.js";
+import { moveOf, moveIcon, shortTask } from "./moves.js";
+
+const blockTasks = b => (b.type === "emom" ? b.stations.flatMap(st => st.tasks) : b.tasks) || [];
+// "Block 1" says nothing a reader needs, so only real names are shown.
+const realName = b => (b.name && !/^block\s*\d+$/i.test(b.name.trim()) ? b.name : "");
 
 const fmtDate = iso => {
   const d = new Date(iso + "T00:00:00");
@@ -39,6 +44,35 @@ export function renderLibrary(root) {
     ...(list.length ? list.map(card) : [el("section", { class: "card empty muted" }, "No workouts yet. Tap New workout to plan one.")])
   );
 
+  // Every movement in the main work, once each: what this session is, at a glance.
+  function moveStrip(w) {
+    const seen = new Map();
+    w.blocks.filter(b => b.type !== "single").flatMap(blockTasks).forEach(([what]) => {
+      const m = moveOf(what);
+      if (m && !seen.has(m.id)) seen.set(m.id, m);
+    });
+    return seen.size > 0 && el("div", { class: "w-moves" }, [...seen.values()].map(m => moveIcon(m)));
+  }
+
+  // One bar, each block's share of the clock. Warm-up and cool-down are the quiet ends.
+  function timeline(w) {
+    return el("div", { class: "w-bar", "aria-hidden": "true" }, w.blocks.map(b =>
+      el("span", { class: b.type === "single" ? "soft" : "", style: "flex-grow:" + blockDuration(b) })));
+  }
+
+  function planRow(b) {
+    const dur = el("span", { class: "d" }, fmt(blockDuration(b)));
+    if (b.type === "single") return el("li", { class: "wb soft" }, el("span", { class: "wb-fmt" }, b.name || b.label || "Timed piece"), dur);
+    const name = realName(b);
+    return el("li", { class: "wb" },
+      el("span", { class: "wb-fmt" }, blockFormat(b), name && el("small", {}, name)), dur,
+      el("ul", { class: "wb-tasks" }, blockTasks(b).map(([what, load]) => {
+        const m = moveOf(what);
+        return el("li", {}, m ? moveIcon(m) : el("span", { class: "mv none" }),
+          el("span", { class: "t" }, shortTask(what)), load && el("span", { class: "load" }, load));
+      })));
+  }
+
   function card(w) {
     const steps = buildSession(w).length;
     const last = store.lastDone(w.id);
@@ -50,7 +84,9 @@ export function renderLibrary(root) {
         el("span", { class: "w-dur" }, fmt(workoutDuration(w)))),
       el("p", { class: "w-meta" }, meta),
       w.notes && el("p", { class: "note", style: "margin:0" }, w.notes),
-      el("ol", { class: "w-blocks" }, w.blocks.map(b => el("li", {}, blockTitle(b), " ", el("span", { class: "d" }, fmt(blockDuration(b)))))),
+      moveStrip(w),
+      timeline(w),
+      el("ol", { class: "w-plan" }, w.blocks.map(planRow)),
       el("a", { class: "btn primary start", href: "#/run/" + w.id }, "Start"),
       el("div", { class: "row grow" },
         el("a", { class: "btn", href: "#/edit/" + w.id }, "Edit"),

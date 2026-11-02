@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- handle -->
+  <path d="M22 30V20a10 8 0 0 1 20 0v10"/>
+  <!-- bell -->
+  <path d="M20 30h24a15 15 0 0 1 6 12c0 7-3 12-6 14H20c-3-2-6-7-6-14a15 15 0 0 1 6-12z"/>
+</svg>

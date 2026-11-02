@@ -66,7 +66,9 @@ h1.title { font-size: 2rem; }
 .tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .tasks li { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: baseline; font-size: 1.15rem; font-weight: 500; }
 .tasks li .w { font-family: var(--display); font-weight: 700; font-size: 1.2rem; color: var(--work); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.tasks li .what { min-width: 0; }
+.tasks li .what { min-width: 0; display: flex; align-items: center; gap: 10px; }
+.tasks li .what .mv { width: 1.5em; height: 1.5em; color: var(--work); }
+.next .tasks li .what .mv { color: var(--muted); }
 .note { margin: 10px 0 0; color: var(--muted); font-size: .95rem; }
 .next .tasks li { font-size: 1rem; color: var(--muted); }
 .next .tasks li .w { color: var(--muted); font-size: 1rem; }
@@ -119,8 +121,25 @@ button:active, .btn:active { transform: translateY(1px); }
 .card .w-name { margin: 0; color: var(--fg); font-family: var(--display); font-weight: 700; font-size: 1.45rem; letter-spacing: .02em; text-transform: uppercase; line-height: 1.1; }
 .w-dur { font-family: var(--display); font-weight: 700; font-size: 1.3rem; color: var(--work); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .w-meta { margin: 0; color: var(--muted); font-size: .9rem; }
-.w-blocks { margin: 0; padding-left: 1.2em; color: var(--fg); font-size: .98rem; display: flex; flex-direction: column; gap: 2px; }
-.w-blocks .d { color: var(--muted); font-variant-numeric: tabular-nums; }
+.mv { display: inline-block; flex: none; width: 1.25em; height: 1.25em; background: currentColor; -webkit-mask: var(--mv) center / contain no-repeat; mask: var(--mv) center / contain no-repeat; }
+.mv.none { background: none; }
+.w-moves { display: flex; flex-wrap: wrap; gap: 6px; color: var(--work); }
+.w-moves .mv { width: 34px; height: 34px; }
+.w-bar { display: flex; gap: 3px; height: 6px; }
+.w-bar span { flex-basis: 0; border-radius: 3px; background: var(--work); }
+.w-bar span.soft { background: var(--line); }
+.w-plan { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.wb { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: baseline; padding: 10px 0; border-top: 1px solid var(--line); }
+.wb .d { font-variant-numeric: tabular-nums; color: var(--muted); font-size: .95rem; }
+.wb-fmt { font-family: var(--display); font-weight: 700; font-size: 1.2rem; letter-spacing: .03em; text-transform: uppercase; }
+.wb-fmt small { margin-left: 8px; font-family: var(--body); font-weight: 500; font-size: .8rem; letter-spacing: .04em; color: var(--muted); }
+.wb.soft { padding: 6px 0; }
+.wb.soft .wb-fmt { font-family: var(--body); font-weight: 500; font-size: .9rem; letter-spacing: .08em; color: var(--muted); }
+.wb-tasks { grid-column: 1 / -1; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.wb-tasks li { display: flex; align-items: center; gap: 8px; font-size: .95rem; }
+.wb-tasks .mv { color: var(--work); }
+.wb-tasks .t { flex: 1; min-width: 0; }
+.wb-tasks .load { color: var(--muted); font-size: .85rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .w-card .start { width: 100%; padding: 12px; }
 .empty { text-align: center; padding: 32px 16px; }
 

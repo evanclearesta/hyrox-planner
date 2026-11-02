@@ -4,6 +4,7 @@
 import { buildSession, fmtMs, fmt } from "./session.js";
 import * as store from "./store.js";
 import { download, slug } from "./dom.js";
+import { moveOf, moveIcon } from "./moves.js";
 
 const TEMPLATE = `
   <nav class="nav">
@@ -260,9 +261,13 @@ export function runTimer(root, workout) {
   }
   function taskList(el, tasks) {
     el.innerHTML = "";
+    // Keep the text lined up: if any task has an illustration, every row gets the slot.
+    const icons = tasks.some(([what]) => moveOf(what));
     tasks.forEach(([what, w]) => {
       const li = document.createElement("li");
       const a = document.createElement("span"); a.className = "what"; a.textContent = what;
+      const m = moveOf(what);
+      if (icons) a.prepend(m ? moveIcon(m) : Object.assign(document.createElement("span"), { className: "mv none" }));
       const b = document.createElement("span"); b.className = "w"; b.textContent = w;
       li.append(a, b); el.append(li);
     });
