@@ -1,5 +1,6 @@
 // Workouts loaded on first visit. After that, everything lives in localStorage.
 const SLED = "103 kg total";
+const PUSH = "152 kg total";
 
 export const SEED = [{
   id: "2026-11-02",
@@ -23,5 +24,28 @@ export const SEED = [{
       note: "Race effort, not all-out. Tap + after each full round." },
     { type: "single", name: "Cool-down", label: "Easy erg, then stretch", dur: 300,
       tasks: [["Easy erg, HR under 130", ""], ["Stretch calves, hips, forearms", ""]], note: "" }
+  ]
+}, {
+  id: "2026-11-03",
+  name: "Sled Push, Wall Balls",
+  date: "2026-11-03",
+  notes: "No running, ergs only. Light on grip after the pull day.",
+  blocks: [
+    { type: "single", name: "Warm-up", label: "Warm-up", dur: 600,
+      tasks: [["5 min easy row or BikeErg", ""], ["Leg swings, hip openers, 10 air squats", ""], ["10 light wall balls", "4–6 kg"], ["2 sled push build-up lengths", "~100 kg total"]],
+      note: "Load the sled for Block 1 during the last minutes." },
+    { type: "every", name: "Block 1", interval: 240, rounds: 4,
+      tasks: [["Row 400 m at ~1:55/500", "damper 5–7"], ["Sled push 25 m (2 lengths)", PUSH], ["Wall balls", "6 kg × 15"]],
+      note: "Low hips, short fast steps, don't stop mid-length. If one 12.5 m length takes over 45 s, drop to ~130 kg total. Rest what's left of the 4:00." },
+    { type: "emom", name: "Block 2", interval: 60, rounds: 5, stations: [
+      { tasks: [["Wall balls × 15, unbroken", "6 kg"]], note: "" },
+      { tasks: [["Sled push 12.5 m (1 length, alternate direction)", PUSH]], note: "" },
+      { tasks: [["Row 12 cal", "damper 5–7"]], note: "Recovery minute: smooth, not a sprint." }
+    ] },
+    { type: "amrap", name: "Block 3", label: "", dur: 600,
+      tasks: [["Row 250 m", "damper 5–7"], ["Sled push 12.5 m (1 length)", "~130 kg total"], ["Wall balls", "6 kg × 15"]],
+      note: "Race effort, not all-out. Wall balls in sets you can hold to the end. Tap + after each full round." },
+    { type: "single", name: "Cool-down", label: "Easy erg, then stretch", dur: 300,
+      tasks: [["Easy erg, HR under 130", ""], ["Stretch quads, calves, hips, shoulders", ""]], note: "" }
   ]
 }];

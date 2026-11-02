@@ -13,11 +13,24 @@ function write(k, v) {
   try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {}
 }
 
+// Seed ids this device has already been offered. A built-in workout is added once, so new
+// ones in seed.js show up after a deploy, while deleted or edited ones are left alone.
+const SEEN = "hyrox.seedSeen.v1";
+
 let cache = null;
 export function all() {
   if (!cache) {
     cache = read(KEY, null);
-    if (!Array.isArray(cache)) { cache = structuredClone(SEED); write(KEY, cache); }
+    if (!Array.isArray(cache)) cache = [];
+    const seen = new Set(read(SEEN, []));
+    let added = false;
+    for (const w of SEED) {
+      if (seen.has(w.id)) continue;
+      seen.add(w.id);
+      if (!cache.some(x => x.id === w.id)) { cache.push(structuredClone(w)); added = true; }
+    }
+    write(SEEN, [...seen]);
+    if (added || read(KEY, null) === null) write(KEY, cache);
   }
   return cache;
 }
