@@ -1,6 +1,6 @@
 // Offline cache. Stale-while-revalidate: open instantly from cache, refresh in the background,
 // so a new deploy shows up on the next launch. Bump VERSION to drop old caches entirely.
-const VERSION = "v6";
+const VERSION = "v7";
 const CACHE = "hyrox-" + VERSION;
 const ASSETS = [
   "./", "index.html", "manifest.webmanifest", "css/app.css",

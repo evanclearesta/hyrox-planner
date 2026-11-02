@@ -1,14 +1,12 @@
 import { el, download, slug, isoDay, addDays, toast, menu } from "./dom.js";
 import * as store from "./store.js";
-import { blockFormat, blockDuration, workoutDuration, fmt } from "./session.js";
+import { blockFormat, blockDuration, workoutDuration, fmtMin } from "./session.js";
 import { moveOf, moveIcon, splitTask } from "./moves.js";
 
 const blockTasks = b => (b.type === "emom" ? b.stations.flatMap(st => st.tasks) : b.tasks) || [];
 const mainBlocks = w => w.blocks.filter(b => b.type !== "single");
 // "Block 1" says nothing a reader needs, so only real names are shown.
 const realName = b => (b.name && !/^block\s*\d+$/i.test(b.name.trim()) ? b.name : "");
-// Durations read as minutes ("14 min"), so they aren't mistaken for a time of day.
-const fmtMin = sec => (sec % 60 ? fmt(sec) : sec / 60 + " min");
 
 const fmtDate = (iso, year) => {
   const d = new Date(iso + "T00:00:00");
@@ -49,6 +47,23 @@ function running(w) {
 
 // The facts that decide whether this is the right session: how long, which stations, how much running.
 const summary = w => [fmtMin(workoutDuration(w)), movesOf(w).length + " stations", running(w)];
+
+// Each block's share of the clock, labelled so it can't be read as a progress bar.
+export function timeline(w) {
+  const parts = w.blocks.map(b => {
+    const min = fmtMin(blockDuration(b));
+    if (b.type === "single") {
+      const n = b.name || b.label || "Timed piece";
+      return { b, label: (/warm/i.test(n) ? "WU" : /cool/i.test(n) ? "CD" : "") + " " + blockDuration(b) / 60, spoken: n + " " + min };
+    }
+    // "EMOM 15" and "AMRAP 12" already carry their minutes; "Every 3:30 × 4" becomes "E3:30 · 14".
+    const f = blockFormat(b), every = f.match(/^Every (\S+) × \d+$/);
+    return { b, label: every ? "E" + every[1] + " · " + min.replace(" min", "") : f, spoken: f + ", " + min };
+  });
+  return el("div", { class: "w-tl", role: "img", "aria-label": "Timeline: " + parts.map(p => p.spoken).join("; ") },
+    el("div", { class: "w-bar" }, parts.map(p => el("span", { class: p.b.type === "single" ? "soft" : "", style: "flex-grow:" + blockDuration(p.b) }))),
+    el("div", { class: "w-tl-lab", "aria-hidden": "true" }, parts.map(p => el("span", { style: "flex-grow:" + blockDuration(p.b) }, p.label.trim()))));
+}
 
 // The day picked in the week strip. Kept across redraws and edits; a fresh launch starts on today.
 let selected = null;
@@ -197,23 +212,6 @@ export function renderLibrary(root) {
     const ms = movesOf(w);
     return ms.length > 0 && el("ul", { class: "w-moves", "aria-label": "Stations" },
       ms.map(m => el("li", {}, moveIcon(m), el("span", {}, m.label))));
-  }
-
-  // Each block's share of the clock, labelled so it can't be read as a progress bar.
-  function timeline(w) {
-    const parts = w.blocks.map(b => {
-      const min = fmtMin(blockDuration(b));
-      if (b.type === "single") {
-        const n = b.name || b.label || "Timed piece";
-        return { b, label: (/warm/i.test(n) ? "WU" : /cool/i.test(n) ? "CD" : "") + " " + blockDuration(b) / 60, spoken: n + " " + min };
-      }
-      // "EMOM 15" and "AMRAP 12" already carry their minutes; "Every 3:30 × 4" becomes "E3:30 · 14".
-      const f = blockFormat(b), every = f.match(/^Every (\S+) × \d+$/);
-      return { b, label: every ? "E" + every[1] + " · " + min.replace(" min", "") : f, spoken: f + ", " + min };
-    });
-    return el("div", { class: "w-tl", role: "img", "aria-label": "Timeline: " + parts.map(p => p.spoken).join("; ") },
-      el("div", { class: "w-bar" }, parts.map(p => el("span", { class: p.b.type === "single" ? "soft" : "", style: "flex-grow:" + blockDuration(p.b) }))),
-      el("div", { class: "w-tl-lab", "aria-hidden": "true" }, parts.map(p => el("span", { style: "flex-grow:" + blockDuration(p.b) }, p.label.trim()))));
   }
 
   function card(w) {

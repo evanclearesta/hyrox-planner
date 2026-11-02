@@ -20,6 +20,8 @@ export const fmt = sec => {
   return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
 };
 export const fmtMs = ms => fmt(ms / 1000);
+// Durations read as minutes ("14 min"), so they aren't mistaken for a time of day.
+export const fmtMin = sec => (sec % 60 ? fmt(sec) : sec / 60 + " min");
 
 // "3:30" -> 210, "12" -> 720 (plain numbers are minutes). Invalid -> NaN.
 export function parseDur(str) {
