@@ -84,9 +84,22 @@ export function renderLibrary(root) {
 
   const newBtn = el("a", { class: "head-btn plus", href: "#/new", "aria-label": "New workout" }, "+");
   const monthLabel = el("span", { class: "month" });
-  const todayBtn = el("button", { class: "today-btn", onclick: () => select(today, "smooth") }, "Back to today");
-  const weekHead = el("div", { class: "week-head" }, monthLabel, todayBtn);
+  const weekHead = el("div", { class: "week-head" }, monthLabel);
   const strip = weekStrip();
+  // Once today's week is swiped out of view, a pill on that side brings it (and today) back.
+  const backBtn = el("button", { class: "week-back", hidden: true, "aria-label": "Back to today", onclick: () => select(today, "smooth") },
+    el("span", { "aria-hidden": "true" }));
+  const todayCell = strip.querySelector('[data-day="' + today + '"]');
+  let pending = 0;
+  const placeBack = () => {
+    pending = 0;
+    const x = todayCell.offsetLeft - strip.scrollLeft, w = strip.clientWidth;
+    const side = x < -4 ? "left" : x > w - 4 ? "right" : "";
+    backBtn.hidden = !side;
+    if (side) backBtn.dataset.side = side;
+  };
+  strip.addEventListener("scroll", () => { pending ||= requestAnimationFrame(placeBack); }, { passive: true });
+  const weekBox = el("div", { class: "week-box" }, strip, backBtn);
   const dayPane = el("div", { class: "day-pane" });
   const others = el("div", { class: "day-pane" });
   const race = raceBand();
@@ -120,9 +133,10 @@ export function renderLibrary(root) {
       ]),
       fileIn),
     msg, race,
-    weekHead, strip, dayPane, others
+    weekHead, weekBox, dayPane, others
   );
   select(selected, "instant");
+  placeBack();
 
   // Race countdown. Set from the header menu; hidden once the race day has passed.
   function raceBand() {
@@ -185,7 +199,6 @@ export function renderLibrary(root) {
     });
     const d = new Date(iso + "T00:00:00");
     monthLabel.textContent = d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
-    todayBtn.hidden = iso === today;
     newBtn.href = "#/new/" + iso;
     const mine = onDay(iso);
     dayPane.replaceChildren(...(mine.length ? mine.map(card) : [
