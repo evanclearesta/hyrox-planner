@@ -87,18 +87,23 @@ export function renderLibrary(root) {
   const weekHead = el("div", { class: "week-head" }, monthLabel);
   const strip = weekStrip();
   // Once today's week is swiped out of view, a pill on that side brings it (and today) back.
+  // The pill takes its own slot, so the strip narrows and the whole week (Mon to Sun) stays visible.
+  // It is placed when a swipe settles, not mid-gesture, then the strip re-snaps to the same week.
   const backBtn = el("button", { class: "week-back", hidden: true, "aria-label": "Back to today", onclick: () => select(today, "smooth") },
     el("span", { "aria-hidden": "true" }));
-  const todayCell = strip.querySelector('[data-day="' + today + '"]');
-  let pending = 0;
+  const todayMon = strip.querySelector('[data-day="' + mondayOf(today) + '"]');
+  let settle = 0;
   const placeBack = () => {
-    pending = 0;
-    const x = todayCell.offsetLeft - strip.scrollLeft, w = strip.clientWidth;
-    const side = x < -4 ? "left" : x > w - 4 ? "right" : "";
+    settle = 0;
+    const w = strip.clientWidth, week = Math.round(strip.scrollLeft / w), home = Math.round(todayMon.offsetLeft / w);
+    const side = week > home ? "left" : week < home ? "right" : "";
+    if ((weekBox.dataset.back || "") === side) return;
     backBtn.hidden = !side;
-    if (side) backBtn.dataset.side = side;
+    backBtn.dataset.side = side;
+    weekBox.dataset.back = side;
+    strip.scrollTo({ left: week * strip.clientWidth, behavior: "instant" });
   };
-  strip.addEventListener("scroll", () => { pending ||= requestAnimationFrame(placeBack); }, { passive: true });
+  strip.addEventListener("scroll", () => { clearTimeout(settle); settle = setTimeout(placeBack, 120); }, { passive: true });
   const weekBox = el("div", { class: "week-box" }, strip, backBtn);
   const dayPane = el("div", { class: "day-pane" });
   const others = el("div", { class: "day-pane" });

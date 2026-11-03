@@ -206,9 +206,9 @@ button:active, .btn:active { transform: translateY(1px); }
 /* Week strip */
 .week-head { display: flex; align-items: center; gap: 12px; min-height: 28px; margin-bottom: -8px; }
 .month { font-family: var(--display); font-weight: 600; font-size: 1.05rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.week-box { position: relative; }
+.week-box { display: flex; }
 .week {
-  position: relative; display: flex; overflow-x: auto;
+  position: relative; flex: 1; min-width: 0; display: flex; overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
 }
@@ -230,14 +230,11 @@ button:active, .btn:active { transform: translateY(1px); }
 .day.sel .dow { color: var(--fg); }
 .day:focus-visible { outline: none; }
 .day:focus-visible .pill { outline: 2px solid var(--work); outline-offset: 2px; }
-/* Sits over the first (or last) pill slot, same size, so it reads as part of the strip. */
-.week-back {
-  position: absolute; top: 0; bottom: 0; left: 0; width: calc(100% / 7); padding: 0 3px;
-  display: flex; justify-content: center; background: none; border: 0;
-}
-.week-back[data-side="right"] { left: auto; right: 0; }
+/* Its own slot beside the strip (an eighth of the row), so no day is hidden behind it. */
+.week-back { order: -1; flex: 0 0 12.5%; padding: 0 3px; display: flex; justify-content: center; background: none; border: 0; border-radius: 999px; }
+.week-back[data-side="right"] { order: 1; }
 .week-back span {
-  width: 100%; max-width: 52px; border-radius: 999px; background: var(--fg); box-shadow: 0 0 0 6px var(--bg);
+  width: 100%; max-width: 52px; border-radius: 999px; background: var(--fg);
 }
 .week-back span::before {
   content: ""; display: block; width: 100%; height: 100%; background: var(--bg);
